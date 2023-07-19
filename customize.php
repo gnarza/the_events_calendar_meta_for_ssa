@@ -39,8 +39,22 @@
 
 add_filter('ssa/templates/get_template_vars', 'add_custom_tec_var', 10, 2);
 
-function add_custom_var($vars, $template)
+function add_custom_tec_var($vars, $template)
 {
-    $vars['tec_partner_email'] = html_entity_decode( urldecode( esc_attr( $_GET['_OrganizerEmail'] ) ) );
+	if ( empty( $vars['appointment_id'] ) ) {
+			return $vars;
+		}
+
+	if ( empty( $vars['Appointment'] ) ) {
+			$vars['Appointment'] = array();
+		}
+	
+	$appointment_obj = new SSA_Appointment_Object( (int)$vars['appointment_id'] );
+	$vars['Appointment'] = array_merge( $vars['Appointment'], $appointment_obj->get_data( 1 ) );
+
+	$meta = $this->plugin->appointment_model->get_metas( (int)$vars['appointment_id'], array( 'booking_url', 'booking_post_id', 'booking_title', 'cancelation_note', 'canceled_by_user_id', 'rescheduling_note', 'rescheduled_by_user_id' ) );
+
+	
+    $vars['tec_partner_email'] = tribe_get_organizer_email($meta['booking_post_id']);
     return $vars;
 }
